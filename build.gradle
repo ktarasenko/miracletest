@@ -11,11 +11,15 @@ buildscript {
 apply plugin: 'android'
 
 android {
-    compileSdkVersion 14
+    compileSdkVersion 10
     buildToolsVersion "17"
 
     repositories {
         mavenCentral()
+    }
+
+    dependencies{
+        compile 'com.nineoldandroids:library:2.4.0'
     }
 }
 

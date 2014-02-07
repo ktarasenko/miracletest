@@ -16,11 +16,6 @@
 
 package com.ktarasenko.miracletest.view;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.ObjectAnimator;
-import android.animation.TypeEvaluator;
-import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -37,6 +32,7 @@ import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
+import com.nineoldandroids.animation.*;
 
 import java.util.ArrayList;
 
@@ -357,10 +353,8 @@ public class DynamicListView extends ListView {
                     int switchViewNewTop = switchView.getTop();
                     int delta = switchViewStartTop - switchViewNewTop;
 
-                    switchView.setTranslationY(delta);
-
                     ObjectAnimator animator = ObjectAnimator.ofFloat(switchView,
-                            View.TRANSLATION_Y, 0);
+                            "translationY", delta, 0);
                     animator.setDuration(MOVE_DURATION);
                     animator.start();
 
