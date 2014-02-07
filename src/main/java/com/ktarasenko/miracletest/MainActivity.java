@@ -18,7 +18,9 @@ package com.ktarasenko.miracletest;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 import com.ktarasenko.miracletest.view.Cheeses;
 import com.ktarasenko.miracletest.view.DynamicListView;
 import com.ktarasenko.miracletest.view.StableArrayAdapter;
@@ -49,7 +51,10 @@ public class MainActivity extends Activity {
         DynamicListView listView = (DynamicListView) findViewById(R.id.listview);
 
         listView.setCheeseList(mCheeseList);
-        listView.setAdapter(adapter);
+
         listView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+        TextView tw = new EditText(this);
+        listView.addHeaderView(tw);
+        listView.setAdapter(adapter);
     }
 }
