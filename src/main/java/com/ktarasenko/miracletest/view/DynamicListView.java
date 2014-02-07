@@ -23,6 +23,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
+import android.os.Build;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.view.MotionEvent;
@@ -344,27 +345,34 @@ public class DynamicListView extends ListView {
             final int switchViewStartTop = switchView.getTop();
 
             mobileView.setVisibility(View.VISIBLE);
-            switchView.setVisibility(View.INVISIBLE);
+
 
             updateNeighborViewsForID(mMobileItemId);
+
 
             final ViewTreeObserver observer = getViewTreeObserver();
             observer.addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
                 public boolean onPreDraw() {
                     observer.removeOnPreDrawListener(this);
 
-                    View switchView = getViewForID(switchItemID);
+                    getViewForID(mMobileItemId).setVisibility(View.INVISIBLE);
 
                     mTotalOffset += deltaY;
+                    /*
+                        This check was added to avoid broken animation during the quick
+                        dragging of the mobileview caused by shuffling of listview's cached scrapviews
+                        going to investigate this misbehavior and find a cure in future
+                     */
+                    if (Build.VERSION.SDK_INT >= 14){
+                        View switchView = getViewForID(switchItemID);
+                        int switchViewNewTop = switchView.getTop();
+                        int delta = switchViewStartTop - switchViewNewTop;
 
-                    int switchViewNewTop = switchView.getTop();
-                    int delta = switchViewStartTop - switchViewNewTop;
-
-                    ObjectAnimator animator = ObjectAnimator.ofFloat(switchView,
-                            "translationY", delta, 0);
-                    animator.setDuration(MOVE_DURATION);
-                    animator.start();
-
+                        ObjectAnimator animator = ObjectAnimator.ofFloat(switchView,
+                                "translationY", delta, 0);
+                        animator.setDuration(MOVE_DURATION);
+                        animator.start();
+                    }
                     return true;
                 }
             });
