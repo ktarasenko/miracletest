@@ -16,7 +16,6 @@ public class EntityListAdapter<T> extends ArrayAdapter<T> {
 
     protected final LayoutInflater mInflater;
     private final EntityHolderCreator<T> mCreator;
-    private boolean isError = false;
     private int layoutId;
 
     public EntityListAdapter(Context context, int layoutId, EntityHolderCreator<T> creator) {

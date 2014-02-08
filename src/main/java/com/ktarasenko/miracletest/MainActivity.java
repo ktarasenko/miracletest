@@ -25,9 +25,10 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.ktarasenko.miracletest.db.DbHelper;
+import com.ktarasenko.miracletest.model.ListController;
 import com.ktarasenko.miracletest.model.ListEntry;
 import com.ktarasenko.miracletest.utils.Utils;
-import com.ktarasenko.miracletest.view.Cheeses;
 import com.ktarasenko.miracletest.view.DynamicListView;
 import com.ktarasenko.miracletest.view.StableArrayAdapter;
 
@@ -46,25 +47,18 @@ public class MainActivity extends Activity {
     private static final String STATE_LIST_POSITION = "list_position";
     private static final String STATE_FIRST_ITEM_OFFSET = "first_item_position";
     private static final String STATE_EDIT_FIELD = "edit_field";
-    private ArrayList<ListEntry> mCheeseList;
-    private StableArrayAdapter mAdapter;
     private DynamicListView mListView;
     private EditText mHeader;
+    private ListController mListController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list_view);
-        String idPrefix = Utils.getUniqueID(this);
-        mCheeseList = new ArrayList<ListEntry>();
-        for (int i = 0; i < Cheeses.sCheeseStrings.length; ++i) {
 
-            mCheeseList.add(new ListEntry(idPrefix + i, Cheeses.sCheeseStrings[i]));
-        }
-
-        mAdapter = new StableArrayAdapter(this, R.layout.text_view, mCheeseList);
+        mListController = new ListController(this);
         mListView = (DynamicListView) findViewById(R.id.listview);
-        mListView.setCheeseList(mCheeseList);
+        mListView.setController(mListController);
         mListView.setChoiceMode(ListView.CHOICE_MODE_NONE);
 
         mHeader = new EditText(this);
@@ -77,7 +71,7 @@ public class MainActivity extends Activity {
                 if (actionId == EditorInfo.IME_ACTION_SEND || event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
                     String text = v.getText().toString();
                     if (!TextUtils.isEmpty(text)){
-                        addItem(v.getText());
+                        mListController.addEntry(text);
                         v.setText(null);
                         return true;
                     }
@@ -86,13 +80,8 @@ public class MainActivity extends Activity {
             }
         });
         mListView.addHeaderView(mHeader);
-        mListView.setAdapter(mAdapter);
+        mListView.setAdapter(mListController.getAdapter());
         restoreState(savedInstanceState);
-    }
-
-    private void addItem(CharSequence text) {
-      mCheeseList.add(0, new ListEntry(Utils.getUniqueID(this) + mCheeseList.size(), text.toString()));
-      mAdapter.notifyDataSetChanged();
     }
 
     @Override

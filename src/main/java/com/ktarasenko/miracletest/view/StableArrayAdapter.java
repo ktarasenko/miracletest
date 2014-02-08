@@ -17,17 +17,10 @@
 package com.ktarasenko.miracletest.view;
 
 import android.content.Context;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.CheckBox;
 import android.widget.CheckedTextView;
-import android.widget.TextView;
-import com.ktarasenko.miracletest.R;
 import com.ktarasenko.miracletest.model.ListEntry;
 
-import java.util.HashMap;
 import java.util.List;
 
 public class StableArrayAdapter extends EntityListAdapter<ListEntry> {
@@ -76,13 +69,7 @@ public class StableArrayAdapter extends EntityListAdapter<ListEntry> {
         @Override
         public void update(ListEntry object) {
             mTextView.setText(object.getText());
-            mTextView.setChecked(object.isChecked());
-//            mTextView.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View view) {
-//                    mTextView.toggle();
-//                }
-//            });
+            mTextView.setChecked(object.isCompleted());
         }
     }
 }

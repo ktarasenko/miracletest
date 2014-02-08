@@ -30,6 +30,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.widget.*;
+import com.ktarasenko.miracletest.model.ListController;
 import com.ktarasenko.miracletest.model.ListEntry;
 import com.nineoldandroids.animation.*;
 
@@ -62,7 +63,7 @@ public class DynamicListView extends ListView {
     private final int MOVE_DURATION = 150;
     private final int LINE_THICKNESS = 15;
 
-    public ArrayList<ListEntry> mCheeseList;
+    public ListController mListController;
 
     private int mLastEventY = -1;
 
@@ -122,9 +123,8 @@ public class DynamicListView extends ListView {
                 public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                     int position = pointToPosition(mDownX, mDownY);
                     if (position >= getHeaderViewsCount()){
-                        ListEntry entry = mCheeseList.get(position - getHeaderViewsCount());
-                        entry.setChecked(!entry.isChecked());
-                        getBaseAdapter().notifyDataSetChanged();
+                       mListController.toggleCompleted(position - getHeaderViewsCount());
+
                     }
                 }
             };
@@ -355,8 +355,7 @@ public class DynamicListView extends ListView {
                 return;
             }
 
-            swapElements(mCheeseList, originalItem, getPositionForID(switchItemID));
-            getBaseAdapter().notifyDataSetChanged();
+            mListController.swapElements(originalItem, getPositionForID(switchItemID));
 
             mDownY = mLastEventY;
 
@@ -396,13 +395,6 @@ public class DynamicListView extends ListView {
             });
         }
     }
-
-    private void swapElements(ArrayList arrayList, int indexOne, int indexTwo) {
-        Object temp = arrayList.get(indexOne);
-        arrayList.set(indexOne, arrayList.get(indexTwo));
-        arrayList.set(indexTwo, temp);
-    }
-
 
     /**
      * Resets all the appropriate fields to a default state while also animating
@@ -527,8 +519,8 @@ public class DynamicListView extends ListView {
         return false;
     }
 
-    public void setCheeseList(ArrayList<ListEntry> cheeseList) {
-        mCheeseList = cheeseList;
+    public void setController(ListController controller) {
+        mListController = controller;
     }
 
     /**
