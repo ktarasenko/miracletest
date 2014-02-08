@@ -17,21 +17,29 @@
 package com.ktarasenko.miracletest.view;
 
 import android.content.Context;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
+import android.widget.CheckedTextView;
+import android.widget.TextView;
+import com.ktarasenko.miracletest.R;
+import com.ktarasenko.miracletest.model.ListEntry;
 
 import java.util.HashMap;
 import java.util.List;
 
-public class StableArrayAdapter extends ArrayAdapter<String> {
+public class StableArrayAdapter extends EntityListAdapter<ListEntry> {
 
     final int INVALID_ID = -1;
 
     HashMap<String, Integer> mIdMap = new HashMap<String, Integer>();
 
-    public StableArrayAdapter(Context context, int textViewResourceId, List<String> objects) {
-        super(context, textViewResourceId, objects);
+    public StableArrayAdapter(Context context, int layoutId, List<ListEntry> objects) {
+        super(context, layoutId, objects, new ItemHolderCreator(context));
         for (int i = 0; i < objects.size(); ++i) {
-            mIdMap.put(objects.get(i), i);
+            mIdMap.put(objects.get(i).getId(), i);
         }
     }
 
@@ -40,12 +48,46 @@ public class StableArrayAdapter extends ArrayAdapter<String> {
         if (position < 0 || position >= mIdMap.size()) {
             return INVALID_ID;
         }
-        String item = getItem(position);
-        return mIdMap.get(item);
+        String id = getItem(position).getId();
+        return mIdMap.get(id);
     }
 
     @Override
     public boolean hasStableIds() {
         return true;
+    }
+
+
+    private static class ItemHolderCreator implements EntityHolderCreator<ListEntry> {
+        public ItemHolderCreator(Context context) {
+
+        }
+
+        @Override
+        public EntityHolder<ListEntry> createHolder(View convertView) {
+            return new ItemHolder(convertView);
+        }
+    }
+
+    private static class ItemHolder implements EntityHolder<ListEntry> {
+
+        private final CheckedTextView mTextView;
+
+        public ItemHolder(View convertView) {
+           mTextView = (CheckedTextView) convertView;
+        }
+
+
+        @Override
+        public void update(ListEntry object) {
+            mTextView.setText(object.getText());
+            mTextView.setChecked(object.isChecked());
+//            mTextView.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View view) {
+//                    mTextView.toggle();
+//                }
+//            });
+        }
     }
 }

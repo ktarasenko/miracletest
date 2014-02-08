@@ -30,6 +30,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.widget.*;
+import com.ktarasenko.miracletest.model.ListEntry;
 import com.nineoldandroids.animation.*;
 
 import java.util.ArrayList;
@@ -61,7 +62,7 @@ public class DynamicListView extends ListView {
     private final int MOVE_DURATION = 150;
     private final int LINE_THICKNESS = 15;
 
-    public ArrayList<String> mCheeseList;
+    public ArrayList<ListEntry> mCheeseList;
 
     private int mLastEventY = -1;
 
@@ -105,11 +106,28 @@ public class DynamicListView extends ListView {
     }
 
     public void init(Context context) {
+        setOnItemClickListener(mOnItemClickListener);
         setOnItemLongClickListener(mOnItemLongClickListener);
         setOnScrollListener(mScrollListener);
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
         mSmoothScrollAmountAtEdge = (int)(SMOOTH_SCROLL_AMOUNT_AT_EDGE / metrics.density);
     }
+
+    /**
+     * Listens for clicks on any items in the listview. Toggles the item state
+     */
+    private OnItemClickListener mOnItemClickListener =
+            new OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                    int position = pointToPosition(mDownX, mDownY);
+                    if (position >= getHeaderViewsCount()){
+                        ListEntry entry = mCheeseList.get(position - getHeaderViewsCount());
+                        entry.setChecked(!entry.isChecked());
+                        getBaseAdapter().notifyDataSetChanged();
+                    }
+                }
+            };
 
     /**
      * Listens for long clicks on any items in the listview. When a cell has
@@ -509,7 +527,7 @@ public class DynamicListView extends ListView {
         return false;
     }
 
-    public void setCheeseList(ArrayList<String> cheeseList) {
+    public void setCheeseList(ArrayList<ListEntry> cheeseList) {
         mCheeseList = cheeseList;
     }
 

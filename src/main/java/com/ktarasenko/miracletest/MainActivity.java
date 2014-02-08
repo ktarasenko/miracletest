@@ -21,6 +21,8 @@ import android.os.Bundle;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+import com.ktarasenko.miracletest.model.ListEntry;
+import com.ktarasenko.miracletest.utils.Utils;
 import com.ktarasenko.miracletest.view.Cheeses;
 import com.ktarasenko.miracletest.view.DynamicListView;
 import com.ktarasenko.miracletest.view.StableArrayAdapter;
@@ -41,18 +43,19 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list_view);
-
-        ArrayList<String>mCheeseList = new ArrayList<String>();
+        String idPrefix = Utils.getUniqueID(this);
+        ArrayList<ListEntry> cheeseList = new ArrayList<ListEntry>();
         for (int i = 0; i < Cheeses.sCheeseStrings.length; ++i) {
-            mCheeseList.add(Cheeses.sCheeseStrings[i]);
+
+            cheeseList.add(new ListEntry(idPrefix + i, Cheeses.sCheeseStrings[i]));
         }
 
-        StableArrayAdapter adapter = new StableArrayAdapter(this, R.layout.text_view, mCheeseList);
+        StableArrayAdapter adapter = new StableArrayAdapter(this, R.layout.text_view, cheeseList);
         DynamicListView listView = (DynamicListView) findViewById(R.id.listview);
 
-        listView.setCheeseList(mCheeseList);
+        listView.setCheeseList(cheeseList);
 
-        listView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+        listView.setChoiceMode(ListView.CHOICE_MODE_NONE);
         TextView tw = new EditText(this);
         listView.addHeaderView(tw);
         listView.setAdapter(adapter);
