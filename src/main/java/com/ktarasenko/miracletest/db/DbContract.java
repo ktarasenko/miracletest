@@ -6,7 +6,7 @@ final class DbContract {
 
     private DbContract() {}
 
-    public static abstract class EntriesTable implements BaseColumns {
+    static abstract class EntriesTable implements BaseColumns {
         public static final String TABLE_NAME = "entries";
         public static final String COLUMN_NAME_ID = "entry_id";
         public static final String COLUMN_NAME_TEXT = "entry_text";
@@ -15,4 +15,5 @@ final class DbContract {
         public static final String COLUMN_NAME_PREV = "entry_prev";
         public static final String COLUMN_NAME_ORDER = "entry_order";
     }
+
 }

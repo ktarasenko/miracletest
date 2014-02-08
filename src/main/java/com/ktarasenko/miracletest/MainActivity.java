@@ -24,15 +24,8 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
-import com.ktarasenko.miracletest.db.DbHelper;
 import com.ktarasenko.miracletest.model.ListController;
-import com.ktarasenko.miracletest.model.ListEntry;
-import com.ktarasenko.miracletest.utils.Utils;
 import com.ktarasenko.miracletest.view.DynamicListView;
-import com.ktarasenko.miracletest.view.StableArrayAdapter;
-
-import java.util.ArrayList;
 
 /**
  * This application creates a listview where the ordering of the data set

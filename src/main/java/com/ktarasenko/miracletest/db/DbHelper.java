@@ -55,7 +55,7 @@ public class DbHelper extends SQLiteOpenHelper {
     }
 
 
-    public ArrayList<ListEntry> getEntries(){
+    public Cursor getEntriesCursor(){
         SQLiteDatabase db = null;
         ArrayList<ListEntry> entries = new ArrayList<ListEntry>();
         try {
@@ -66,37 +66,24 @@ public class DbHelper extends SQLiteOpenHelper {
                     EntriesTable._ID,
                     EntriesTable.COLUMN_NAME_ID,
                     EntriesTable.COLUMN_NAME_TEXT,
-                    EntriesTable.COLUMN_NAME_COMPLETED
+                    EntriesTable.COLUMN_NAME_COMPLETED,
+                    EntriesTable.COLUMN_NAME_ORDER
             };
             Cursor cursor = db.query(EntriesTable.TABLE_NAME,
                     entriesProjection, null, null, null, null, EntriesTable.COLUMN_NAME_ORDER + " DESC");
 
-            if (cursor.getCount() > 0){
-                cursor.moveToFirst();
-                while (!cursor.isAfterLast()) {
-                    String id = cursor.getString(
-                            cursor.getColumnIndexOrThrow(EntriesTable.COLUMN_NAME_ID));
-                    String text = cursor.getString(
-                            cursor.getColumnIndexOrThrow(EntriesTable.COLUMN_NAME_TEXT));
-                    boolean isCompleted = cursor.getInt(
-                            cursor.getColumnIndexOrThrow(EntriesTable.COLUMN_NAME_COMPLETED)) == 1;
-                    entries.add(new ListEntry(id, text, isCompleted));
-                    cursor.moveToNext();
-                }
-            }
+            return cursor;
 
         } catch (SQLException ex){
             Logger.error(TAG, ex.getMessage(), ex);
-        } finally {
             if (db != null){
                 db.close();
             }
         }
-
-        return entries;
+        return null;
     }
 
-    public long addEntry(int position, ListEntry entry) {
+    public long addEntry(ListEntry entry) {
         SQLiteDatabase db = null;
         long rowId = 0;
 
@@ -106,7 +93,7 @@ public class DbHelper extends SQLiteOpenHelper {
             ContentValues values = new ContentValues();
             values.put(EntriesTable.COLUMN_NAME_ID, entry.getId());
             values.put(EntriesTable.COLUMN_NAME_TEXT, entry.getText());
-            values.put(EntriesTable.COLUMN_NAME_ORDER, position);
+            values.put(EntriesTable.COLUMN_NAME_ORDER, entry.getOrder());
             values.put(EntriesTable.COLUMN_NAME_COMPLETED, entry.isCompleted()? 1 : 0);
             db.beginTransaction();
 
@@ -149,28 +136,28 @@ public class DbHelper extends SQLiteOpenHelper {
         }
     }
 
-    public void swapElements(String id1, String id2, int order1, int order2) {
+    public void swapElements(ListEntry entry1, ListEntry entry2) {
         SQLiteDatabase db = null;
         try {
             db = getWritableDatabase();
 
             ContentValues valuesOne = new ContentValues();
-            valuesOne.put(EntriesTable.COLUMN_NAME_ORDER, order2);
+            valuesOne.put(EntriesTable.COLUMN_NAME_ORDER, entry2.getOrder());
 
             ContentValues valuesTwo = new ContentValues();
-            valuesTwo.put(EntriesTable.COLUMN_NAME_ORDER, order1);
+            valuesTwo.put(EntriesTable.COLUMN_NAME_ORDER, entry1.getOrder());
 
             db.beginTransaction();
             db.update(
                     EntriesTable.TABLE_NAME,
                     valuesOne,
                     EntriesTable.COLUMN_NAME_ID + " = ?",
-                    new String[]{id2});
+                    new String[]{entry1.getId()});
             db.update(
                     EntriesTable.TABLE_NAME,
                     valuesTwo,
-                    EntriesTable.COLUMN_NAME_ORDER + " = ?",
-                    new String[]{id1});
+                    EntriesTable.COLUMN_NAME_ID + " = ?",
+                    new String[]{entry2.getId()});
 
             db.setTransactionSuccessful();
             db.endTransaction();
@@ -182,5 +169,18 @@ public class DbHelper extends SQLiteOpenHelper {
                 db.close();
             }
         }
+    }
+
+    public static ListEntry getItem(Cursor cursor) {
+        String id = cursor.getString(
+                cursor.getColumnIndexOrThrow(EntriesTable.COLUMN_NAME_ID));
+        String text = cursor.getString(
+                cursor.getColumnIndexOrThrow(EntriesTable.COLUMN_NAME_TEXT));
+        boolean isCompleted = cursor.getInt(
+                cursor.getColumnIndexOrThrow(EntriesTable.COLUMN_NAME_COMPLETED)) == 1;
+        Integer order = cursor.getInt(
+                cursor.getColumnIndexOrThrow(EntriesTable.COLUMN_NAME_ORDER));
+        return new ListEntry(id, text, isCompleted, order);
+
     }
 }

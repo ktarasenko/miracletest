@@ -3,13 +3,15 @@ package com.ktarasenko.miracletest.model;
 public class ListEntry {
 
     private final String mId;
-    private boolean mCompleted;
-    private String mText;
+    private final boolean mCompleted;
+    private final String mText;
+    private final int mOrder;
 
-    public ListEntry(String id, String text, boolean isCompleted){
+    public ListEntry(String id, String text, boolean isCompleted, int order){
         mId = id;
         mText = text;
         mCompleted = isCompleted;
+        mOrder = order;
     }
 
     public boolean isCompleted() {
@@ -24,12 +26,14 @@ public class ListEntry {
         return mId;
     }
 
+    public int getOrder() {
+        return mOrder;
+    }
+
     @Override
     public String toString() {
         return mText;
     }
 
-    public void setCompleted(boolean isCompleted) {
-        mCompleted = isCompleted;
-    }
+
 }

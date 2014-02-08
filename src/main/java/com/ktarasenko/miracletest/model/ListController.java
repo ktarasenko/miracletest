@@ -1,11 +1,13 @@
 package com.ktarasenko.miracletest.model;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.widget.BaseAdapter;
 import com.ktarasenko.miracletest.R;
 import com.ktarasenko.miracletest.db.DbHelper;
+import com.ktarasenko.miracletest.utils.Logger;
 import com.ktarasenko.miracletest.utils.Utils;
-import com.ktarasenko.miracletest.view.StableArrayAdapter;
+import com.ktarasenko.miracletest.view.ItemAdapter;
 
 import java.util.ArrayList;
 
@@ -14,18 +16,17 @@ import java.util.ArrayList;
  */
 public class ListController {
 
-    private final ArrayList<ListEntry> mList = new ArrayList<ListEntry>();
     private final DbHelper mDbHelper;
     private final Context mContext;
     private final String mDeviceId;
-    private final StableArrayAdapter mAdapter;
+    private final ItemAdapter mAdapter;
 
     public ListController(Context context){
         mContext = context;
         mDeviceId = Utils.getUniqueID(mContext);
         mDbHelper = new DbHelper(context);
-        mAdapter =  new StableArrayAdapter(mContext, R.layout.text_view, mList);
-        mList.addAll(mDbHelper.getEntries());
+
+        mAdapter =  new ItemAdapter(mContext, R.layout.text_view, mDbHelper.getEntriesCursor());
     }
 
     public BaseAdapter getAdapter(){
@@ -33,27 +34,25 @@ public class ListController {
     }
 
     public void addEntry(String text){
-        ListEntry entry = new ListEntry(mDeviceId + mList.size(), text.toString(), false);
-        mDbHelper.addEntry(mList.size(), entry);
-        mList.add(0, entry);
-        mAdapter.notifyDataSetChanged();
+        ListEntry entry = new ListEntry(mDeviceId + mAdapter.getCount(), text, false, mAdapter.getCount());
+        mDbHelper.addEntry(entry);
+        requery();
+    }
+
+    private void requery() {
+        mAdapter.changeCursor(mDbHelper.getEntriesCursor());
     }
 
     public void toggleCompleted(int index){
-        toggleCompleted(mList.get(index));
-    }
-
-    public void toggleCompleted(ListEntry entry){
-       entry.setCompleted(!entry.isCompleted());
-       mDbHelper.updateCompleted(entry.getId(), entry.isCompleted());
-       mAdapter.notifyDataSetChanged();
+        ListEntry entry = DbHelper.getItem((Cursor) mAdapter.getItem(index));
+        mDbHelper.updateCompleted(entry.getId(), !entry.isCompleted());
+        requery();
     }
 
     public void swapElements(int indexOne, int indexTwo) {
-        mDbHelper.swapElements(mList.get(indexOne).getId(), mList.get(indexTwo).getId(), mList.size() - indexOne, mList.size() - indexTwo);
-        ListEntry temp = mList.get(indexOne);
-        mList.set(indexOne, mList.get(indexTwo));
-        mList.set(indexTwo, temp);
-        mAdapter.notifyDataSetChanged();
+        mDbHelper.swapElements(
+                DbHelper.getItem((Cursor) mAdapter.getItem(indexOne)),
+                DbHelper.getItem((Cursor) mAdapter.getItem(indexTwo)));
+        requery();
     }
 }
