@@ -34,22 +34,17 @@ public class StableArrayAdapter extends EntityListAdapter<ListEntry> {
 
     final int INVALID_ID = -1;
 
-    HashMap<String, Integer> mIdMap = new HashMap<String, Integer>();
-
     public StableArrayAdapter(Context context, int layoutId, List<ListEntry> objects) {
         super(context, layoutId, objects, new ItemHolderCreator(context));
-        for (int i = 0; i < objects.size(); ++i) {
-            mIdMap.put(objects.get(i).getId(), i);
-        }
     }
 
     @Override
     public long getItemId(int position) {
-        if (position < 0 || position >= mIdMap.size()) {
+        if (position < 0 || position >= getCount()) {
             return INVALID_ID;
         }
         String id = getItem(position).getId();
-        return mIdMap.get(id);
+        return id.hashCode();
     }
 
     @Override

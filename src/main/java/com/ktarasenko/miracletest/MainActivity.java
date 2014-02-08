@@ -18,9 +18,13 @@ package com.ktarasenko.miracletest;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.view.KeyEvent;
+import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 import com.ktarasenko.miracletest.model.ListEntry;
 import com.ktarasenko.miracletest.utils.Utils;
 import com.ktarasenko.miracletest.view.Cheeses;
@@ -39,25 +43,78 @@ import java.util.ArrayList;
  */
 public class MainActivity extends Activity {
 
+    private static final String STATE_LIST_POSITION = "list_position";
+    private static final String STATE_FIRST_ITEM_OFFSET = "first_item_position";
+    private static final String STATE_EDIT_FIELD = "edit_field";
+    private ArrayList<ListEntry> mCheeseList;
+    private StableArrayAdapter mAdapter;
+    private DynamicListView mListView;
+    private EditText mHeader;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list_view);
         String idPrefix = Utils.getUniqueID(this);
-        ArrayList<ListEntry> cheeseList = new ArrayList<ListEntry>();
+        mCheeseList = new ArrayList<ListEntry>();
         for (int i = 0; i < Cheeses.sCheeseStrings.length; ++i) {
 
-            cheeseList.add(new ListEntry(idPrefix + i, Cheeses.sCheeseStrings[i]));
+            mCheeseList.add(new ListEntry(idPrefix + i, Cheeses.sCheeseStrings[i]));
         }
 
-        StableArrayAdapter adapter = new StableArrayAdapter(this, R.layout.text_view, cheeseList);
-        DynamicListView listView = (DynamicListView) findViewById(R.id.listview);
+        mAdapter = new StableArrayAdapter(this, R.layout.text_view, mCheeseList);
+        mListView = (DynamicListView) findViewById(R.id.listview);
+        mListView.setCheeseList(mCheeseList);
+        mListView.setChoiceMode(ListView.CHOICE_MODE_NONE);
 
-        listView.setCheeseList(cheeseList);
+        mHeader = new EditText(this);
+        mHeader.setHint(R.string.add_item_hint);
+        mHeader.setSingleLine();
+        mHeader.setImeOptions(EditorInfo.IME_ACTION_SEND);
+        mHeader.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_SEND || event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
+                    String text = v.getText().toString();
+                    if (!TextUtils.isEmpty(text)){
+                        addItem(v.getText());
+                        v.setText(null);
+                        return true;
+                    }
+                }
+                return false;
+            }
+        });
+        mListView.addHeaderView(mHeader);
+        mListView.setAdapter(mAdapter);
+        restoreState(savedInstanceState);
+    }
 
-        listView.setChoiceMode(ListView.CHOICE_MODE_NONE);
-        TextView tw = new EditText(this);
-        listView.addHeaderView(tw);
-        listView.setAdapter(adapter);
+    private void addItem(CharSequence text) {
+      mCheeseList.add(0, new ListEntry(Utils.getUniqueID(this) + mCheeseList.size(), text.toString()));
+      mAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        restoreState(savedInstanceState);
+    }
+
+    private void restoreState(Bundle savedInstanceState) {
+        if (savedInstanceState != null){
+            mListView.setSelectionFromTop(savedInstanceState.getInt(STATE_LIST_POSITION, 0), savedInstanceState.getInt(STATE_FIRST_ITEM_OFFSET, 0));
+            mHeader.setText(savedInstanceState.getCharSequence(STATE_EDIT_FIELD));
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(STATE_LIST_POSITION, mListView.getFirstVisiblePosition());
+        if (mListView.getChildCount() > 0){
+            outState.putInt(STATE_FIRST_ITEM_OFFSET, mListView.getChildAt(0).getTop());
+        }
+        outState.putCharSequence(STATE_EDIT_FIELD, mHeader.getText());
     }
 }
