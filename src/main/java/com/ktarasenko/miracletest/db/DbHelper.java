@@ -69,7 +69,7 @@ public class DbHelper extends SQLiteOpenHelper {
                     EntriesTable.COLUMN_NAME_COMPLETED
             };
             Cursor cursor = db.query(EntriesTable.TABLE_NAME,
-                    entriesProjection, null, null, null, null, EntriesTable.COLUMN_NAME_ORDER);
+                    entriesProjection, null, null, null, null, EntriesTable.COLUMN_NAME_ORDER + " DESC");
 
             if (cursor.getCount() > 0){
                 cursor.moveToFirst();
@@ -109,12 +109,7 @@ public class DbHelper extends SQLiteOpenHelper {
             values.put(EntriesTable.COLUMN_NAME_ORDER, position);
             values.put(EntriesTable.COLUMN_NAME_COMPLETED, entry.isCompleted()? 1 : 0);
             db.beginTransaction();
-//            UPDATE entries SET order = (order + 1) WHERE order >= position;
-            db.execSQL("UPDATE " + EntriesTable.TABLE_NAME
-                    + " SET " + EntriesTable.COLUMN_NAME_ORDER
-                    + " = (" + EntriesTable.COLUMN_NAME_ORDER
-                    + ") + 1 WHERE " + EntriesTable.COLUMN_NAME_ORDER
-                    + " >= " + position);
+
             rowId = db.insert(
                     EntriesTable.TABLE_NAME,
                     null,

@@ -34,8 +34,8 @@ public class ListController {
 
     public void addEntry(String text){
         ListEntry entry = new ListEntry(mDeviceId + mList.size(), text.toString(), false);
+        mDbHelper.addEntry(mList.size(), entry);
         mList.add(0, entry);
-        mDbHelper.addEntry(0, entry);
         mAdapter.notifyDataSetChanged();
     }
 
@@ -50,7 +50,7 @@ public class ListController {
     }
 
     public void swapElements(int indexOne, int indexTwo) {
-        mDbHelper.swapElements(mList.get(indexOne).getId(), mList.get(indexTwo).getId(), indexOne, indexTwo);
+        mDbHelper.swapElements(mList.get(indexOne).getId(), mList.get(indexTwo).getId(), mList.size() - indexOne, mList.size() - indexTwo);
         ListEntry temp = mList.get(indexOne);
         mList.set(indexOne, mList.get(indexTwo));
         mList.set(indexTwo, temp);
