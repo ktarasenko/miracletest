@@ -51,6 +51,13 @@ public class ModelTest extends AndroidTestCase {
         fillDb();
         int count = Cheeses.sCheeseStrings.length;
         Random r = new Random();
+        //some edge cases
+        subtestSwapElements(0, 0);
+        subtestSwapElements(0, count-1);
+        subtestSwapElements(0, count-2);
+        subtestSwapElements(1, 2);
+        subtestSwapElements(2, 1);
+        //some random permutations
         for(int i = 0; i < 100; i++){
             subtestSwapElements(r.nextInt(count), r.nextInt(count));
         }
