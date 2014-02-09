@@ -6,12 +6,11 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.text.TextUtils;
 import com.ktarasenko.miracletest.db.DbContract.EntriesTable;
 import com.ktarasenko.miracletest.model.ListEntry;
 import com.ktarasenko.miracletest.utils.Logger;
 import com.ktarasenko.miracletest.utils.Utils;
-
-import java.util.ArrayList;
 
 public class DbHelper extends SQLiteOpenHelper {
 
@@ -32,7 +31,7 @@ public class DbHelper extends SQLiteOpenHelper {
                     EntriesTable.COLUMN_NAME_ORDER+ INT_TYPE + COMMA_SEP +
                     EntriesTable.COLUMN_NAME_TEXT+ TEXT_TYPE + COMMA_SEP +
                     EntriesTable.COLUMN_NAME_COMPLETED+ INT_TYPE +
-            " )";
+                    " )";
 
 
     private static final String SQL_DELETE_ENTRIES_TABLE =
@@ -49,7 +48,7 @@ public class DbHelper extends SQLiteOpenHelper {
         db.execSQL(SQL_CREATE_ENTRIES_TABLE);
     }
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-       recreateDb(db);
+        recreateDb(db);
     }
 
     private SQLiteDatabase recreateDb(SQLiteDatabase db) {
@@ -70,10 +69,41 @@ public class DbHelper extends SQLiteOpenHelper {
                     EntriesTable.COLUMN_NAME_ID,
                     EntriesTable.COLUMN_NAME_TEXT,
                     EntriesTable.COLUMN_NAME_COMPLETED,
-                    EntriesTable.COLUMN_NAME_ORDER
+                    EntriesTable.COLUMN_NAME_ORDER,
+                    EntriesTable.COLUMN_NAME_PREV,
+                    EntriesTable.COLUMN_NAME_NEXT
             };
             Cursor cursor = db.query(EntriesTable.TABLE_NAME,
                     entriesProjection, null, null, null, null, EntriesTable.COLUMN_NAME_ORDER + " DESC");
+
+            return cursor;
+
+        } catch (SQLException ex){
+            Logger.error(TAG, ex.getMessage(), ex);
+            if (db != null){
+                db.close();
+            }
+        }
+        return null;
+    }
+
+    public Cursor getEntriesCursorUnordered(){
+        SQLiteDatabase db = null;
+        try {
+            db = getReadableDatabase();
+
+
+            String[] entriesProjection = {
+                    EntriesTable._ID,
+                    EntriesTable.COLUMN_NAME_ID,
+                    EntriesTable.COLUMN_NAME_TEXT,
+                    EntriesTable.COLUMN_NAME_COMPLETED,
+                    EntriesTable.COLUMN_NAME_ORDER,
+                    EntriesTable.COLUMN_NAME_PREV,
+                    EntriesTable.COLUMN_NAME_NEXT
+            };
+            Cursor cursor = db.query(EntriesTable.TABLE_NAME,
+                    entriesProjection, null, null, null, null, null);
 
             return cursor;
 
@@ -96,20 +126,34 @@ public class DbHelper extends SQLiteOpenHelper {
             ContentValues values = new ContentValues();
 
             db.beginTransaction();
-            Cursor c= db.query(EntriesTable.TABLE_NAME, new String [] {"MAX("+EntriesTable.COLUMN_NAME_ORDER+")"}, null, null, null, null, null);
+            Cursor c= db.query(EntriesTable.TABLE_NAME,
+                    new String [] {"MAX("+EntriesTable.COLUMN_NAME_ORDER+")",
+                            EntriesTable.COLUMN_NAME_ID},
+                    null, null, null, null, null);
             c.moveToFirst();
 
             Integer lastOrder = c.getInt(0)+1;
+            String currId =  mDeviceId + lastOrder;
+            String nextId = c.getString(1);
 
-            values.put(EntriesTable.COLUMN_NAME_ID, mDeviceId + lastOrder);
+            values.put(EntriesTable.COLUMN_NAME_ID, currId);
             values.put(EntriesTable.COLUMN_NAME_TEXT, text);
             values.put(EntriesTable.COLUMN_NAME_ORDER, lastOrder);
+            values.put(EntriesTable.COLUMN_NAME_NEXT, nextId);
             values.put(EntriesTable.COLUMN_NAME_COMPLETED, 0);
 
             rowId = db.insert(
                     EntriesTable.TABLE_NAME,
                     null,
                     values);
+
+            values = new ContentValues();
+            values.put(EntriesTable.COLUMN_NAME_PREV, currId);
+            db.update(
+                    EntriesTable.TABLE_NAME,
+                    values,
+                    EntriesTable.COLUMN_NAME_ID + " = ?",
+                    new String[]{nextId});
 
             db.setTransactionSuccessful();
             db.endTransaction();
@@ -150,23 +194,9 @@ public class DbHelper extends SQLiteOpenHelper {
         try {
             db = getWritableDatabase();
 
-            ContentValues valuesOne = new ContentValues();
-            valuesOne.put(EntriesTable.COLUMN_NAME_ORDER, entry2.getOrder());
-
-            ContentValues valuesTwo = new ContentValues();
-            valuesTwo.put(EntriesTable.COLUMN_NAME_ORDER, entry1.getOrder());
-
             db.beginTransaction();
-            db.update(
-                    EntriesTable.TABLE_NAME,
-                    valuesOne,
-                    EntriesTable.COLUMN_NAME_ID + " = ?",
-                    new String[]{entry1.getId()});
-            db.update(
-                    EntriesTable.TABLE_NAME,
-                    valuesTwo,
-                    EntriesTable.COLUMN_NAME_ID + " = ?",
-                    new String[]{entry2.getId()});
+            updateLinks(db, entry1, entry2);
+            updateLinks(db, entry2, entry1);
 
             db.setTransactionSuccessful();
             db.endTransaction();
@@ -180,6 +210,38 @@ public class DbHelper extends SQLiteOpenHelper {
         }
     }
 
+    private void updateLinks(SQLiteDatabase db, ListEntry entry1, ListEntry entry2) {
+        if (entry1.getPrev() != null && !TextUtils.equals(entry1.getPrev(), entry2.getId())){
+            ContentValues v = new ContentValues();
+            v.put(EntriesTable.COLUMN_NAME_NEXT, entry2.getId());
+            db.update(
+                    EntriesTable.TABLE_NAME,
+                    v,
+                    EntriesTable.COLUMN_NAME_ID + " = ?",
+                    new String[]{entry1.getPrev()});
+        }
+        if (entry1.getNext() != null && !TextUtils.equals(entry1.getNext(), entry2.getId())){
+            ContentValues v = new ContentValues();
+            v.put(EntriesTable.COLUMN_NAME_PREV, entry2.getId());
+            db.update(
+                    EntriesTable.TABLE_NAME,
+                    v,
+                    EntriesTable.COLUMN_NAME_ID + " = ?",
+                    new String[]{entry1.getNext()});
+        }
+        ContentValues v = new ContentValues();
+        v.put(EntriesTable.COLUMN_NAME_ORDER, entry2.getOrder());
+        v.put(EntriesTable.COLUMN_NAME_PREV, TextUtils.equals(entry1.getNext(), entry2.getId())?
+                entry2.getId(): entry2.getPrev());
+        v.put(EntriesTable.COLUMN_NAME_NEXT, TextUtils.equals(entry1.getPrev(), entry2.getId())?
+                entry2.getId() : entry2.getNext());
+        db.update(
+                EntriesTable.TABLE_NAME,
+                v,
+                EntriesTable.COLUMN_NAME_ID + " = ?",
+                new String[]{entry1.getId()});
+    }
+
     public static ListEntry getItem(Cursor cursor) {
         String id = cursor.getString(
                 cursor.getColumnIndexOrThrow(EntriesTable.COLUMN_NAME_ID));
@@ -189,7 +251,10 @@ public class DbHelper extends SQLiteOpenHelper {
                 cursor.getColumnIndexOrThrow(EntriesTable.COLUMN_NAME_COMPLETED)) == 1;
         Integer order = cursor.getInt(
                 cursor.getColumnIndexOrThrow(EntriesTable.COLUMN_NAME_ORDER));
-        return new ListEntry(id, text, isCompleted, order);
-
+        String next = cursor.getString(
+                cursor.getColumnIndexOrThrow(EntriesTable.COLUMN_NAME_NEXT));
+        String prev = cursor.getString(
+                cursor.getColumnIndexOrThrow(EntriesTable.COLUMN_NAME_PREV));
+        return new ListEntry(id, text, isCompleted, order, TextUtils.isEmpty(prev)? null : prev, TextUtils.isEmpty(next)? null: next);
     }
 }
