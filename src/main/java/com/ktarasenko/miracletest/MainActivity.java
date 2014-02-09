@@ -27,14 +27,6 @@ import android.widget.TextView;
 import com.ktarasenko.miracletest.model.ListController;
 import com.ktarasenko.miracletest.view.DynamicListView;
 
-/**
- * This application creates a listview where the ordering of the data set
- * can be modified in response to user touch events.
- *
- * An item in the listview is selected via a long press event and is then
- * moved around by tracking and following the movement of the user's finger.
- * When the item is released, it animates to its new position within the listview.
- */
 public class MainActivity extends Activity {
 
     private static final String STATE_LIST_POSITION = "list_position";

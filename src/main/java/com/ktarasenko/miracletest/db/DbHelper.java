@@ -61,7 +61,6 @@ public class DbHelper extends SQLiteOpenHelper {
 
     public Cursor getEntriesCursor(){
         SQLiteDatabase db = null;
-        ArrayList<ListEntry> entries = new ArrayList<ListEntry>();
         try {
             db = getReadableDatabase();
 
