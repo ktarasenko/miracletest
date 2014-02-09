@@ -18,12 +18,10 @@ public class ListController {
 
     private final DbHelper mDbHelper;
     private final Context mContext;
-    private final String mDeviceId;
     private final ItemAdapter mAdapter;
 
     public ListController(Context context){
         mContext = context;
-        mDeviceId = Utils.getUniqueID(mContext);
         mDbHelper = new DbHelper(context);
 
         mAdapter =  new ItemAdapter(mContext, R.layout.text_view, mDbHelper.getEntriesCursor());
@@ -34,8 +32,7 @@ public class ListController {
     }
 
     public void addEntry(String text){
-        ListEntry entry = new ListEntry(mDeviceId + mAdapter.getCount(), text, false, mAdapter.getCount());
-        mDbHelper.addEntry(entry);
+        mDbHelper.addNewEntry(text);
         requery();
     }
 

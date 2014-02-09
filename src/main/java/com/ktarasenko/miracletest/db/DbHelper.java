@@ -9,6 +9,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import com.ktarasenko.miracletest.db.DbContract.EntriesTable;
 import com.ktarasenko.miracletest.model.ListEntry;
 import com.ktarasenko.miracletest.utils.Logger;
+import com.ktarasenko.miracletest.utils.Utils;
 
 import java.util.ArrayList;
 
@@ -37,8 +38,11 @@ public class DbHelper extends SQLiteOpenHelper {
     private static final String SQL_DELETE_ENTRIES_TABLE =
             "DROP TABLE IF EXISTS " + EntriesTable.TABLE_NAME;
 
+    private final String mDeviceId;
+
     public DbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        mDeviceId = Utils.getUniqueID(context);
     }
 
     public void onCreate(SQLiteDatabase db) {
@@ -83,7 +87,7 @@ public class DbHelper extends SQLiteOpenHelper {
         return null;
     }
 
-    public long addEntry(ListEntry entry) {
+    public long addNewEntry(String text) {
         SQLiteDatabase db = null;
         long rowId = 0;
 
@@ -91,11 +95,17 @@ public class DbHelper extends SQLiteOpenHelper {
             db = getWritableDatabase();
 
             ContentValues values = new ContentValues();
-            values.put(EntriesTable.COLUMN_NAME_ID, entry.getId());
-            values.put(EntriesTable.COLUMN_NAME_TEXT, entry.getText());
-            values.put(EntriesTable.COLUMN_NAME_ORDER, entry.getOrder());
-            values.put(EntriesTable.COLUMN_NAME_COMPLETED, entry.isCompleted()? 1 : 0);
+
             db.beginTransaction();
+            Cursor c= db.query(EntriesTable.TABLE_NAME, new String [] {"MAX("+EntriesTable.COLUMN_NAME_ORDER+")"}, null, null, null, null, null);
+            c.moveToFirst();
+
+            Integer lastOrder = c.getInt(0)+1;
+
+            values.put(EntriesTable.COLUMN_NAME_ID, mDeviceId + lastOrder);
+            values.put(EntriesTable.COLUMN_NAME_TEXT, text);
+            values.put(EntriesTable.COLUMN_NAME_ORDER, lastOrder);
+            values.put(EntriesTable.COLUMN_NAME_COMPLETED, 0);
 
             rowId = db.insert(
                     EntriesTable.TABLE_NAME,
