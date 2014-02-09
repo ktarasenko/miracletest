@@ -57,6 +57,7 @@ public class MainActivity extends Activity {
         mHeader = new EditText(this);
         mHeader.setHint(R.string.add_item_hint);
         mHeader.setSingleLine();
+        mHeader.setMinHeight(getResources().getDimensionPixelSize(R.dimen.list_item_height));
         mHeader.setImeOptions(EditorInfo.IME_ACTION_SEND);
         mHeader.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
